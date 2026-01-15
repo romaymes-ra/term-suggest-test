@@ -1,3 +1,7 @@
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("TermSearcher.Tests")]
+
 namespace TermSearcherAppCnsle;
 
 using System;
@@ -31,6 +35,10 @@ public class TermSearcher : ITermSearcher
 
         if (numberOfSuggestions < 0)
             throw new ArgumentNullException("Number of suggestions cannot be negative. Please provide a valid number.", nameof(numberOfSuggestions));
+
+        // We put all the choices and term to lowercase
+        choices = choices.Select(c => c.ToLowerInvariant());
+        term = term.ToLowerInvariant();
 
         Dictionary<string, int> choicesDifference = new Dictionary<string, int>();
 
@@ -72,7 +80,7 @@ public class TermSearcher : ITermSearcher
     /// <param name="dest">The first string</param>
     /// <param name="src">The second string</param>
     /// <returns>The number of different characters</returns>
-    private int GetDifferenceScore(string dest, string src)
+    internal int GetDifferenceScore(string dest, string src)
     {
         int differenceScore = 0;
 
@@ -100,7 +108,8 @@ public class TermSearcher : ITermSearcher
     /// <param name="numberOfSuggestions">Number of suggestions to return</param>
     /// <param name="termLength">Length of the searched term</param>
     /// <returns>The best sorted terms</returns>
-    private IEnumerable<string> GetTopSuggest(Dictionary<string, int> terms, int numberOfSuggestions, int termLength)
+    
+    internal IEnumerable<string> GetTopSuggest(Dictionary<string, int> terms, int numberOfSuggestions, int termLength)
     {
         // Sort by length
         return terms
