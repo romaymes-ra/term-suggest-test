@@ -34,7 +34,7 @@ public class TermSearcher : ITermSearcher
             throw new ArgumentNullException("Choices cannot be null. Please provide a valid list of choices.", nameof(choices));
 
         if (numberOfSuggestions < 0)
-            throw new ArgumentNullException("Number of suggestions cannot be negative. Please provide a valid number.", nameof(numberOfSuggestions));
+            throw new ArgumentException("Number of suggestions cannot be negative. Please provide a valid number.", nameof(numberOfSuggestions));
 
         // We put all the choices and term to lowercase
         choices = choices.Select(c => c.ToLowerInvariant());

@@ -2,6 +2,7 @@ namespace TermSearcher.Tests;
 
 using TermSearcherAppCnsle;
 
+[TestFixture]
 public class GetSuggestionsTests
 {
     private readonly ITermSearcher _termSearcher;
@@ -11,7 +12,7 @@ public class GetSuggestionsTests
         _termSearcher = new TermSearcher();
     }
 
-    [Fact]
+    [Test]
     public void GetSuggestions_SortsByScoreWithSameLength()
     {
 
@@ -20,12 +21,12 @@ public class GetSuggestionsTests
 
         var result = _termSearcher.GetSuggestions(term, choices, 3).ToList();
 
-        Assert.Equal("aba", result[0]); // 1
-        Assert.Equal("azz", result[1]); // 2
-        Assert.Equal("zzz", result[2]); // int.maxValue
+        Assert.That(result[0], Is.EqualTo("aba")); // 1
+        Assert.That(result[1], Is.EqualTo("azz")); // 2
+        Assert.That(result[2], Is.EqualTo("zzz")); // int.maxValue
     }
 
-    [Fact]
+    [Test]
     public void GetSuggestions_SameScore_SortsByLength()
     {
         var term = "test";
@@ -33,28 +34,25 @@ public class GetSuggestionsTests
 
         var result = _termSearcher.GetSuggestions(term, choices, 3).ToList();
 
-        // Assert - closer to the length of "test" first
-        Assert.Equal("testing", result[0]);       
-        Assert.Equal("testinglong", result[1]);     
-        Assert.Equal("testingverylong", result[2]); 
+        Assert.That(result[0], Is.EqualTo("testing"));
+        Assert.That(result[1], Is.EqualTo("testinglong"));
+        Assert.That(result[2], Is.EqualTo("testingverylong"));
     }
 
-    [Fact]
+    [Test]
     public void GetSuggestions_SameScoreAndLength_SortsAlphabetically()
     {
         var term = "abc";
         var choices = new List<string> { "ddd", "eee", "fff" };
-        // All have same length
 
         var result = _termSearcher.GetSuggestions(term, choices, 3).ToList();
 
-        // Assert - Alphabetical order
-        Assert.Equal("ddd", result[0]);
-        Assert.Equal("eee", result[1]);
-        Assert.Equal("fff", result[2]);
+        Assert.That(result[0], Is.EqualTo("ddd"));
+        Assert.That(result[1], Is.EqualTo("eee"));
+        Assert.That(result[2], Is.EqualTo("fff"));
     }
 
-    [Fact]
+    [Test]
     public void GetSuggestions_LimitsToNumberOfSuggestions()
     {
         var term = "test";
@@ -62,14 +60,13 @@ public class GetSuggestionsTests
 
         var result = _termSearcher.GetSuggestions(term, choices, 3).ToList();
 
-        // Assert - Only 3 results
-        Assert.Equal(3, result.Count);
-        Assert.Equal("test", result[0]); // 0
-        Assert.Equal("best", result[1]); // 1 
-        Assert.Equal("dest", result[2]); // 1 
+        Assert.That(result.Count, Is.EqualTo(3));
+        Assert.That(result[0], Is.EqualTo("test")); // 0
+        Assert.That(result[1], Is.EqualTo("best")); // 1 
+        Assert.That(result[2], Is.EqualTo("dest")); // 1 
     }
 
-    [Fact]
+    [Test]
     public void GetSuggestions_FewerCandidatesThanRequested_ReturnsAll()
     {
         var term = "test";
@@ -77,11 +74,10 @@ public class GetSuggestionsTests
 
         var result = _termSearcher.GetSuggestions(term, choices, 10).ToList();
 
-        // Assert - 10 results asked,  2 results available
-        Assert.Equal(2, result.Count);
+        Assert.That(result.Count, Is.EqualTo(2));
     }
 
-    [Fact]
+    [Test]
     public void GetSuggestions_EmptyChoices_ReturnsEmpty()
     {
         var term = "test";
@@ -89,23 +85,75 @@ public class GetSuggestionsTests
 
         var result = _termSearcher.GetSuggestions(term, choices, 5).ToList();
 
-        // Assert - No results available
-        Assert.Empty(result);
+        Assert.That(result, Is.Empty);
     }
 
-    [Fact]
+    [Test]
     public void GetSuggestions_ComplexSorting_ReturnsCorrectOrder()
     {
-        // Arrange - Example from the global test 
         var term = "gros";
         var choices = new List<string> { "gros", "gras", "graisse", "agressif", "go", "ros", "gro" };
 
-        
+
         var result = _termSearcher.GetSuggestions(term, choices, 2).ToList();
 
-        // Assert - Only top 2 results
-        Assert.Equal(2, result.Count);
-        Assert.Equal("gros", result[0]);  // 0 diff
-        Assert.Equal("gras", result[1]);  // 1 diff
+        Assert.That(result.Count, Is.EqualTo(2));
+        Assert.That(result[0], Is.EqualTo("gros"));  // 0 diff
+        Assert.That(result[1], Is.EqualTo("gras"));  // 1 diff
+    }
+
+    // Case for sensitivity of the search
+    // Should'nt be case insensitive
+    [TestCase("GROS", "gros", true)]
+    [TestCase("Gros", "GROS", true)]
+    [TestCase("GrOs", "GRos", true)]
+    public void GetSuggestions_CaseInsensitive_FindsMatches(
+        string term, string choice, bool shouldMatch)
+    {
+        var choices = new List<string> { choice };
+        var result = _termSearcher.GetSuggestions(term, choices, 1).ToList();
+
+        Assert.That(result[0], Is.EqualTo(choice.ToLower()));
+    }
+
+    [Test]
+    public void GetSuggestions_NullTermParameter_ThrowsArgumentException(){
+        List<string> choices = new List<string> { "gris", "gras" }; 
+
+        var exception = Assert.Throws<ArgumentException>(() => _termSearcher.GetSuggestions(null, choices, 2));
+
+        Assert.That(exception, Is.Not.Null);
+        Assert.That(exception.Message, Does.StartWith("Term cannot be null or empty. Please try another term."));
+    }
+
+     [Test]
+    public void GetSuggestions_NullTermP_ThrowsArgumentException(){
+        List<string> choices = new List<string> { "gris", "gras" }; 
+
+        var exception = Assert.Throws<ArgumentException>(() => _termSearcher.GetSuggestions(null, choices, 2));
+
+        Assert.That(exception, Is.Not.Null);
+        Assert.That(exception.Message, Does.StartWith("Term cannot be null or empty. Please try another term."));
+    }
+
+     [Test]
+    public void GetSuggestions_NullChoicesParameter_ThrowsArgumentException(){
+        string term = "test";
+        List<string> choices = null;
+
+        var exception = Assert.Throws<ArgumentNullException>(() => _termSearcher.GetSuggestions(term, choices, 2));
+
+        Assert.That(exception, Is.Not.Null);
+        Assert.That(exception.Message, Does.Contain("Choices cannot be null"));
+    }
+
+       [Test]
+    public void GetSuggestions_NegativeCount_ThrowsArgumentException(){
+        string term = "gros";
+        List<string> choices = new List<string> { "gris", "gras" };
+
+        var exception = Assert.Throws<ArgumentException>(() => _termSearcher.GetSuggestions(term, choices, -1));
+        Assert.That(exception, Is.Not.Null);
+        Assert.That(exception.Message, Does.Contain("Number of suggestions cannot be negative"));
     }
 }
