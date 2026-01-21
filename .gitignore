@@ -38,3 +38,6 @@ bld/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Other
+coveragereport
